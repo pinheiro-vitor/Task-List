@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreTaskRequest;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,7 +10,7 @@ class TaskController extends Controller
 {
     public function index()
     {
-        $tasks = Task::all(); 
+        $tasks = Task::all();
         return Inertia::render('Tasks', compact('tasks'));
     }
 
@@ -21,6 +20,8 @@ class TaskController extends Controller
             'title' => 'required|string|min:3|max:255',
             'description' => 'required|string|min:3|max:1000',
             'completed' => 'boolean',
+            'due_date' => 'nullable|date',
+            'due_time' => 'nullable|date_format:H:i',
         ]);
 
         $validated['user_id'] = auth()->user()->id;
@@ -37,6 +38,8 @@ class TaskController extends Controller
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string|max:1000',
             'completed' => 'sometimes|boolean',
+            'due_date' => 'sometimes|date',
+            'due_time' => 'sometimes|date_format:H:i',
         ]);
 
         $validated['user_id'] = auth()->user()->id;
