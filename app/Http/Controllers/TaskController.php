@@ -3,15 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use League\Csv\Writer;
+use League\Csv\Header;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class TaskController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = Task::all();
-        return Inertia::render('Tasks', compact('tasks'));
+        $query = Task::query();
+
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where('title', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
+        }
+
+    $tasks = $query->get();
+
+    return Inertia::render('Tasks', compact('tasks'));
     }
 
     public function store(Request $request)
@@ -20,7 +32,7 @@ class TaskController extends Controller
             'title' => 'required|string|min:3|max:255',
             'description' => 'required|string|min:3|max:1000',
             'completed' => 'boolean',
-            'due_date' => 'nullable|date',
+            'due_date' => 'nullable|date|after:today',
             'due_time' => 'nullable|date_format:H:i',
         ]);
 
@@ -38,7 +50,7 @@ class TaskController extends Controller
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string|max:1000',
             'completed' => 'sometimes|boolean',
-            'due_date' => 'sometimes|date',
+            'due_date' => 'sometimes|date|after:today',
             'due_time' => 'sometimes|date_format:H:i',
         ]);
 
@@ -55,5 +67,30 @@ class TaskController extends Controller
 
         return redirect()->route('tasks')
             ->with('message', 'Task deletada com sucesso!');
+    }
+
+    public function export()
+    {
+        $csv = Writer::createFromFileObject(new \SplTempFileObject());
+        $csv->insertOne(['ID', 'Título', 'Status','Descrição', 'Data marcada', 'Hora marcada']);
+
+        $tasks = Task::all();
+        foreach ($tasks as $task) {
+            $csv->insertOne([
+                $task->id,
+                $task->title,
+                $task->description,
+                $task->completed ? 'Concluída' : 'Pendente',
+                $task->due_date,
+                $task->due_time,
+            ]);
+        }
+
+        $response = new StreamedResponse(function() use ($csv) {
+            $csv->output('tasks.csv');
+        });
+
+        $response->headers->set('Content-Type', 'text/csv');
+        return $response;
     }
 }

@@ -3,49 +3,61 @@
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="mb-2 flex flex-row justify-between align-middle">
-                <div class="flex align-middle justify-center h-full p-2"><h2 class="font-semibold text-xl text-gray-800 leading-tight">Task List</h2></div>
-                <button class="px-2 py-1 bg-blue-500 text-white rounded font-bold uppercase" @click="openModal">Adicionar task</button>
+            <div class="flex align-middle justify-center h-full p-2">
+                <h2 class="font-semibold text-2xl text-gray-800 leading-tight uppercase">Task List</h2>
             </div>
         </template>
 
         <div class="mt-4 min-w-full flex items-center justify-center bg-teal-lightest font-sans">
-            <div class="bg-white rounded shadow p-6 m-4 w-full">
+            <div class="bg-gray-250 rounded shadow p-6 m-4 w-full">
+                <div class="mb-2 flex flex-row justify-between align-middle">
+                    <button class="uppercase text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"@click="openModal">
+                        Adicionar task
+                    </button>
+                    <form class="max-w-md">
+                        <label for="default-search" class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                                </svg>
+                            </div>
+                            <input type="search" v-model="searchQuery" @keyup.enter="searchTasks" id="default-search" class="block w-full px-8 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Titulo ou descrição" required />
+                        </div>
+                    </form>
+                </div>
                 <transition name="fade">
                     <div v-if="flashMessage" class="center absolute bg-blue-100 text-blue-600 p-1 rounded shadow-lg">
                         {{ flashMessage }}
                     </div>
                 </transition>
-                <div class="mb-4 flex justify-end">
-                    Pesquisa aqui.
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 border">
-                        <thead>
+                <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        <thead class="tracking-wider text-xs px-6 py-4 text-center text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
-                                <th class="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
-                                <th class="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tempo restante</th>
-                                <th class="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                <th scope="col" class="px-6 py-3">ID</th>
+                                <th scope="col" class="px-6 py-3">Título</th>
+                                <th scope="col" class="px-6 py-3">Status</th>
+                                <th scope="col" class="px-6 py-3">Prazo</th>
+                                <th scope="col" class="px-6 py-3">Ações</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-for="task in paginatedTasks" :key="task.id">
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900">{{ task.id }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900">{{ task.title }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900">
-                                    <input type="checkbox" v-model="task.completed" @change="updateTaskStatus(task)">
+                        <tbody>
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" v-for="task in paginatedTasks" :key="task.id">
+                                <td class="px-6 py-4 text-center text-white tracking-wider">{{ task.id }}</td>
+                                <td class="px-6 py-4 text-center text-white tracking-wider">{{ task.title }}</td>
+                                <td class="px-6 py-4 text-center">
+                                    <input type="checkbox" v-model="task.completed" @change="updateTaskStatus(task)" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900">{{ calculateTimeRemaining(task.due_date, task.due_time) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center text-gray-900">
-                                    <button @click="openDetailsModal(task)" class="px-2 mr-2 py-1 bg-yellow-500 text-white rounded font-bold uppercase">
+                                <td class="px-6 py-4 text-center text-white tracking-wider">{{ calculateTimeRemaining(task.due_date, task.due_time) }}</td>
+                                <td class="px-6 py-4 text-center text-white tracking-wider">
+                                    <button @click="openDetailsModal(task)" class="text-blue-700 hover:text-white border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-500 dark:focus:ring-blue-800">
                                         Visualizar
                                     </button>
-                                    <button @click="openEditModal(task)" class="px-2 mr-2 py-1 bg-green-600 text-white rounded font-bold uppercase">
+                                    <button @click="openEditModal(task)" class="text-green-700 hover:text-white border border-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-600 dark:focus:ring-green-800">
                                         Editar
                                     </button>
-                                    <button @click="destroy(task.id)" type="button" class="px-2 py-1 bg-red-600 text-white rounded font-bold uppercase">
+                                    <button @click="destroy(task.id)" type="button" class="text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
                                         Apagar
                                     </button>
                                 </td>
@@ -55,13 +67,42 @@
                 </div>
                 <!-- Paginação -->
                 <div class="mt-4 flex justify-between items-center">
-                    <button class="px-4 py-2 bg-blue-500 text-white rounded font-bold" :disabled="currentPage === 1" @click="currentPage--">Anterior</button>
-                    <div>Page {{ currentPage }} of {{ totalPages }}</div>
-                    <button class="px-4 py-2 bg-blue-500 text-white rounded font-bold" :disabled="currentPage === totalPages" @click="currentPage++">Próxima</button>
+                    <button @click="downloadCSV" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-3 rounded inline-flex items-center">
+                        <svg class="fill-current w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z"/></svg>
+                        <span>Exportar CSV</span>
+                    </button>
+                    <nav aria-label="Page navigation example">
+                        <ul class="flex items-center -space-x-px h-8 text-sm">
+                            <li>
+                                <button class="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-e-0 border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" :disabled="currentPage === 1" @click="currentPage--">
+                                    <span class="sr-only">Anterior</span>
+                                    <svg class="w-2.5 h-2.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 1 1 5l4 4" />
+                                    </svg>
+                                </button>
+                            </li>
+                            <li v-for="page in totalPages" :key="page">
+                                <button @click="currentPage = page" :class="{
+                                    'z-10 flex items-center justify-center px-3 h-8 leading-tight text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white': currentPage === page,
+                                    'flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white': currentPage !== page
+                                }">
+                                    {{ page }}
+                                </button>
+                            </li>
+                            <li>
+                                <button class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" :disabled="currentPage === totalPages" @click="currentPage++">
+                                    <span class="sr-only">Próxima</span>
+                                    <svg class="w-2.5 h-2.5 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4" />
+                                    </svg>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
-        
+
         <!-- Modal de Adição de Task -->
         <div v-if="showModal" class="fixed z-10 inset-0 overflow-y-auto">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -79,9 +120,13 @@
                             </h3>
                             <div class="mt-2">
                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker" placeholder="Title" v-model="form.title">
+                                <p v-if="form.errors.title" class="text-red-500 text-sm">{{ form.errors.title }}</p>
                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mt-4" placeholder="Description" v-model="form.description">
+                                <p v-if="form.errors.description" class="text-red-500 text-sm">{{ form.errors.description }}</p>
                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mt-4" type="date" placeholder="Data de Vencimento" v-model="form.due_date">
+                                <p v-if="form.errors.due_date" class="text-red-500 text-sm">{{ form.errors.due_date }}</p>
                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mt-4" type="time" placeholder="Hora de Vencimento" v-model="form.due_time">
+                                <p v-if="form.errors.due_date_time" class="text-red-500 text-sm">{{ form.errors.due_date_time }}</p>
                             </div>
                         </div>
                     </div>
@@ -113,9 +158,13 @@
                             </h3>
                             <div class="mt-2">
                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker" placeholder="Title" v-model="editForm.title">
+                                <p v-if="editForm.errors.title" class="text-red-500 text-sm">{{ editForm.errors.title }}</p>
                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mt-4" placeholder="Description" v-model="editForm.description">
+                                <p v-if="editForm.errors.description" class="text-red-500 text-sm">{{ editForm.errors.description }}</p>
                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mt-4" type="date" placeholder="Data de Vencimento" v-model="editForm.due_date">
+                                <p v-if="editForm.errors.due_date" class="text-red-500 text-sm">{{ editForm.errors.due_date }}</p>
                                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker mt-4" type="time" placeholder="Hora de Vencimento" v-model="editForm.due_time">
+                                <p v-if="editForm.errors.due_date_time" class="text-red-500 text-sm">{{ editForm.errors.due_date_time }}</p>
                             </div>
                         </div>
                     </div>
@@ -163,8 +212,6 @@
     </AuthenticatedLayout>
 </template>
 
-
-
 <script>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ref, reactive, onMounted, computed } from 'vue';
@@ -176,6 +223,11 @@ export default {
         AuthenticatedLayout,
         Head,
     },
+    methods: {
+        downloadCSV() {
+            window.location.href = this.route('tasks.export');
+        },
+    },
     props: {
         tasks: Array,
         flash: Object
@@ -184,11 +236,10 @@ export default {
         const currentPage = ref(1);
         const itemsPerPage = 5;
 
-        const totalPages = computed(() => Math.ceil(tasks.value.length / itemsPerPage));
-
+        const totalPages = computed(() => Math.ceil(filteredTasks.value.length / itemsPerPage));
         const paginatedTasks = computed(() => {
             const startIndex = (currentPage.value - 1) * itemsPerPage;
-            return tasks.value.slice(startIndex, startIndex + itemsPerPage);
+            return filteredTasks.value.slice(startIndex, startIndex + itemsPerPage);
         });
 
         const destroy = (id) => {
@@ -201,7 +252,8 @@ export default {
             title: '',
             description: '',
             due_date: '',
-            due_time: ''
+            due_time: '',
+            errors: {}
         });
 
         const editForm = reactive({
@@ -209,7 +261,8 @@ export default {
             title: '',
             description: '',
             due_date: '',
-            due_time: ''
+            due_time: '',
+            errors: {}
         });
 
         const detailsForm = reactive({
@@ -225,12 +278,20 @@ export default {
         const showEditModal = ref(false);
         const showDetailsModal = ref(false);
         const flashMessage = ref(props.flash.message);
+        const searchQuery = ref('');
+
+        const filteredTasks = computed(() => {
+            return tasks.value.filter(task => 
+                task.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+                task.description.toLowerCase().includes(searchQuery.value.toLowerCase())
+            );
+        });
 
         onMounted(() => {
             if (flashMessage.value) {
                 setTimeout(() => {
                     flashMessage.value = '';
-                }, 2250);
+                }, 2200);
             }
         });
 
@@ -258,6 +319,7 @@ export default {
             editForm.description = '';
             editForm.due_date = '';
             editForm.due_time = '';
+            editForm.errors = {};
         }
 
         function openDetailsModal(task) {
@@ -278,8 +340,63 @@ export default {
             detailsForm.due_time = '';
         }
 
+        function validateForm() {
+            const errors = {};
+            const now = new Date();
+            const dueDateTime = new Date(`${form.due_date}T${form.due_time}`);
+
+            if (form.title.trim() === '') {
+                errors.title = 'O título não pode ficar em branco.';
+            }
+
+            if (form.description.trim() === '') {
+                errors.description = 'A descrição não pode ficar em branco.';
+            } else if (form.description.length < 3) {
+                errors.description = 'A descrição deve ter pelo menos 3 caracteres.';
+            }
+
+            if ((form.due_date && !form.due_time) || (!form.due_date && form.due_time)) {
+                errors.due_date_time = 'Se a data ou hora estiver preenchida, ambos devem estar preenchidos.';
+            }
+
+            if (form.due_date && form.due_time && dueDateTime <= now) {
+                errors.due_date = 'A data e a hora devem ser no futuro.';
+            }
+
+            form.errors = errors;
+            return Object.keys(errors).length === 0;
+        }
+
+        function validateEditForm() {
+            const errors = {};
+            const now = new Date();
+            const dueDateTime = new Date(`${editForm.due_date}T${editForm.due_time}`);
+
+            if (editForm.title.trim() === '') {
+                errors.title = 'O título não pode ficar em branco.';
+            }
+
+            if (editForm.description.trim() === '') {
+                errors.description = 'A descrição não pode ficar em branco.';
+            } else if (editForm.description.length < 3) {
+                errors.description = 'A descrição deve ter pelo menos 3 caracteres.';
+            }
+
+            if ((editForm.due_date && !editForm.due_time) || (!editForm.due_date && editForm.due_time)) {
+                errors.due_date_time = 'Se a data ou hora estiver preenchida, ambos devem estar preenchidos.';
+            }
+
+            if (editForm.due_date && editForm.due_time && dueDateTime <= now) {
+                errors.due_date = 'A data e a hora devem ser no futuro.';
+            }
+
+            editForm.errors = errors;
+            return Object.keys(errors).length === 0;
+        }
+        
+
         function submit() {
-            if (form.title !== '' && form.description !== '') {
+            if (validateForm()) {
                 const dueDateTime = `${form.due_date}T${form.due_time}`;
                 Inertia.post('/tasks', { ...form, due_date_time: dueDateTime }, {
                     onSuccess: () => {
@@ -303,24 +420,23 @@ export default {
         }
 
         function updateTask() {
-        if (editForm.id !== null && editForm.title !== '' && editForm.description !== '') {
-            const dueDateTime = `${editForm.due_date}T${editForm.due_time}`;
-            Inertia.put(`/tasks/${editForm.id}`, { ...editForm, due_date_time: dueDateTime }, {
-                onSuccess: () => {
-                    const index = tasks.value.findIndex(task => task.id === editForm.id);
-                    if (index !== -1) {
-                        tasks.value[index] = { ...tasks.value[index], ...editForm };
+            if (validateEditForm() && editForm.id !== null) {
+                const dueDateTime = `${editForm.due_date}T${editForm.due_time}`;
+                Inertia.put(`/tasks/${editForm.id}`, { ...editForm, due_date_time: dueDateTime }, {
+                    onSuccess: () => {
+                        const index = tasks.value.findIndex(task => task.id === editForm.id);
+                        if (index !== -1) {
+                            tasks.value[index] = { ...tasks.value[index], ...editForm };
+                        }
+                        closeEditModal();
                     }
-                    closeEditModal();
-                }
-            });
+                });
             }
         }
 
         function updateTaskStatus(task) {
             const originalCompleted = task.completed;
 
-            // Optimistically update the local state
             const index = tasks.value.findIndex(t => t.id === task.id);
             if (index !== -1) {
                 tasks.value[index].completed = task.completed;
@@ -328,11 +444,8 @@ export default {
 
             Inertia.put(`/tasks/${task.id}`, { completed: task.completed }, {
                 preserveState: true,
-                onSuccess: () => {
-                    // Optional: You can handle success logic here if needed
-                },
+                onSuccess: () => {},
                 onError: () => {
-                    // Revert the state in case of an error
                     if (index !== -1) {
                         tasks.value[index].completed = originalCompleted;
                     }
@@ -348,32 +461,36 @@ export default {
                 return 'Vencido';
             }
             if(diff < 60000) {
-                return 'Menos de 1 minuto restante';
+                return 'Menos de 1 minuto';
             }
             if(diff < 3600000) {
                 const minutes = Math.floor(diff / 60000);
-                return `${minutes}m restantes`;
+                return `${minutes}m`;
             }
             if(diff < 86400000) {
                 const hours = Math.floor(diff / 3600000);
                 const minutes = Math.floor((diff % 3600000) / 60000);
-                return `${hours}h ${minutes}m restantes`;
+                return `${hours}h ${minutes}m`;
             }
             if(diff < 604800000) {
                 const days = Math.floor(diff / 86400000);
                 const hours = Math.floor((diff % 86400000) / 3600000);
-                return `${days}d ${hours}h restantes`;
+                return `${days}d ${hours}h`;
             }
             if(diff < 2592000000) {
                 const weeks = Math.floor(diff / 604800000);
                 const days = Math.floor((diff % 604800000) / 86400000);
-                return `${weeks}w ${days}d restantes`;
+                return `${weeks}w ${days}d`;
             }
             if(diff < 31536000000) {
                 const months = Math.floor(diff / 2592000000);
                 const weeks = Math.floor((diff % 2592000000) / 604800000);
-                return `${months}m ${weeks}w restantes`;
+                return `${months}m ${weeks}w`;
             }
+        }
+
+        function searchTasks() {
+            Inertia.get('/tasks', { search: searchQuery.value });
         }
 
         return {
@@ -398,18 +515,12 @@ export default {
             flashMessage,
             currentPage,
             totalPages,
-            paginatedTasks
+            paginatedTasks,
+            searchQuery,
+            searchTasks,
+            validateEditForm,
+            validateForm
         };
-    },
-    
+    }
 };
 </script>
-
-<style scoped>
-.fade-enter-active, .fade-leave-active {
-    transition: opacity 1s ease;
-}
-.fade-enter, .fade-leave-active {
-    opacity: 0;
-}
-</style>
