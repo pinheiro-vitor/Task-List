@@ -34,16 +34,16 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'completed' => 'boolean',
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|required|string|max:1000',
+            'completed' => 'sometimes|boolean',
         ]);
 
         $validated['user_id'] = auth()->user()->id;
 
         $task->update($validated);
 
-        return redirect()->back();
+        return redirect()->back()->with('message', 'Task atualizada com sucesso!');
     }
 
     public function destroy(Task $task)
